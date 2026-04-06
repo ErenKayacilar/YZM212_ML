@@ -3,18 +3,16 @@ import matplotlib.pyplot as plt
 import emcee
 import corner
 
-# =========================
 # 1) SENTETIK VERI OLUSTURMA
-# =========================
 np.random.seed(42)
 
-true_mu = 150.0  # Gerçek parlaklık
-true_sigma = 10.0  # Gerçek gözlem hatası
-n_obs = 50  # Gözlem sayısı
+true_mu = 150.0 
+true_sigma = 10.0  
+n_obs = 50 
 
 data = true_mu + true_sigma * np.random.randn(n_obs)
 
-# Veriyi görmek için histogram
+
 plt.figure(figsize=(8, 5))
 plt.hist(data, bins=12, edgecolor='black')
 plt.axvline(true_mu, linestyle='--', label='Gerçek μ')
@@ -25,13 +23,11 @@ plt.legend()
 plt.show()
 
 
-# =========================
+
 # 2) BAYESYEN FONKSIYONLAR
-# =========================
 def log_likelihood(theta, data):
     mu, sigma = theta
 
-    # sigma fiziksel olarak pozitif olmak zorunda
     if sigma <= 0:
         return -np.inf
 
@@ -56,23 +52,21 @@ def log_probability(theta, data):
     return lp + log_likelihood(theta, data)
 
 
-# =========================
+
 # 3) MCMC CALISTIRMA
-# =========================
-initial = np.array([140, 5])  # Başlangıç tahmini
+initial = np.array([140, 5])
 n_walkers = 32
 n_dim = 2
 n_steps = 2000
 
-# Walker başlangıç pozisyonları
+
 pos = initial + 1e-4 * np.random.randn(n_walkers, n_dim)
 
 sampler = emcee.EnsembleSampler(n_walkers, n_dim, log_probability, args=(data,))
 sampler.run_mcmc(pos, n_steps, progress=True)
 
-# =========================
+
 # 4) CHAIN GORSELLESTIRME
-# =========================
 samples = sampler.get_chain()
 
 fig, axes = plt.subplots(2, figsize=(10, 7), sharex=True)
@@ -89,16 +83,14 @@ plt.suptitle("MCMC Zincirleri")
 plt.tight_layout()
 plt.show()
 
-# =========================
+
 # 5) BURN-IN SONRASI ORNEKLER
-# =========================
 flat_samples = sampler.get_chain(discard=500, thin=15, flat=True)
 
 print("Düzleştirilmiş örnek sayısı:", len(flat_samples))
 
-# =========================
+
 # 6) PARAMETRE OZET ISTATISTIKLERI
-# =========================
 mu_samples = flat_samples[:, 0]
 sigma_samples = flat_samples[:, 1]
 
@@ -123,9 +115,7 @@ print(f"σ için %16 = {sigma_q16:.4f}")
 print(f"σ için %84 = {sigma_q84:.4f}")
 print(f"σ mutlak hata = {sigma_abs_error:.4f}")
 
-# =========================
-# 7) CORNER PLOT
-# =========================
+
 fig = corner.corner(
     flat_samples,
     labels=[r"$\mu$ (Parlaklık)", r"$\sigma$ (Hata)"],
